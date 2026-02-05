@@ -1,39 +1,34 @@
-/**
- * API Utility
- * 
- * Helper functions untuk fetch data dari backend API
- * Kamu bisa modify atau extend sesuai kebutuhan
- */
+// src/lib/api.ts
+import { BlogListResponse, BlogPost } from "@/types/blog";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+// ❗ FIX: BASE_URL TANPA /api
+const BASE_URL = "https://be-blg-production.up.railway.app";
 
-/**
- * Generic fetch function dengan error handling
- */
-async function fetchAPI<T>(endpoint: string): Promise<T> {
-  try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`);
-    
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('API Fetch Error:', error);
-    throw error;
+async function fetchJSON<T>(url: string): Promise<T> {
+  const res = await fetch(url, {
+    cache: "no-store",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("API ERROR:", res.status, text);
+    throw new Error(`API Error ${res.status}`);
   }
+
+  return res.json();
 }
 
-// TODO: Implement API functions sesuai dengan endpoint yang tersedia
-// Contoh:
-// export async function getBlogPosts() {
-//   return fetchAPI<BlogPost[]>('/posts');
-// }
-//
-// export async function getBlogPost(id: string) {
-//   return fetchAPI<BlogPost>(`/posts/${id}`);
-// }
+export function getRecommendedPosts(): Promise<BlogListResponse> {
+  return fetchJSON(`${BASE_URL}/posts/recommended`);
+}
 
-export { fetchAPI, API_BASE_URL };
+export function getMostLikedPosts(): Promise<BlogListResponse> {
+  return fetchJSON(`${BASE_URL}/posts/most-liked`);
+}
+
+export function getPostDetail(id: number): Promise<BlogPost> {
+  return fetchJSON(`${BASE_URL}/posts/${id}`);
+}
